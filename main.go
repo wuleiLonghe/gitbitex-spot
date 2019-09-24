@@ -17,7 +17,6 @@ package main
 import (
 	"github.com/gitbitex/gitbitex-spot/conf"
 	"github.com/gitbitex/gitbitex-spot/matching"
-	"github.com/gitbitex/gitbitex-spot/models"
 	"github.com/gitbitex/gitbitex-spot/pushing"
 	"github.com/gitbitex/gitbitex-spot/rest"
 	"github.com/gitbitex/gitbitex-spot/service"
@@ -37,7 +36,7 @@ func main() {
 		log.Info(http.ListenAndServe("localhost:6060", nil))
 	}()
 
-	go models.NewBinLogStream().Start()
+	//go models.NewBinLogStream().Start()
 
 	matching.StartEngine()
 
