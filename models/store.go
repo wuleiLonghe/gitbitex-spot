@@ -23,6 +23,7 @@ type Store interface {
 
 	GetUserByEmail(email string) (*User, error)
 	AddUser(user *User) error
+	UpdateUser(user *User) error
 
 	GetAccount(userId int64, currency string) (*Account, error)
 	GetAccountsByUserId(userId int64) ([]*Account, error)
@@ -39,6 +40,7 @@ type Store interface {
 	GetProducts() ([]*Product, error)
 
 	GetOrderById(orderId int64) (*Order, error)
+	GetOrderByClientOid(userId int64, clientOid string) (*Order, error)
 	GetOrderByIdForUpdate(orderId int64) (*Order, error)
 	GetOrdersByUserId(userId int64, statuses []OrderStatus, side *Side, productId string,
 		beforeId, afterId int64, limit int) ([]*Order, error)
@@ -56,7 +58,7 @@ type Store interface {
 	GetTradesByProductId(productId string, count int) ([]*Trade, error)
 	AddTrades(trades []*Trade) error
 
-	GetTicksByProductId(productId string, granularity int64) ([]*Tick, error)
+	GetTicksByProductId(productId string, granularity int64, limit int) ([]*Tick, error)
 	GetLastTickByProductId(productId string, granularity int64) (*Tick, error)
 	AddTicks(ticks []*Tick) error
 }

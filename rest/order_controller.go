@@ -18,17 +18,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gitbitex/gitbitex-spot/conf"
 	"github.com/gitbitex/gitbitex-spot/matching"
 	"github.com/gitbitex/gitbitex-spot/models"
 	"github.com/gitbitex/gitbitex-spot/service"
 	"github.com/gitbitex/gitbitex-spot/utils"
+	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 	"github.com/shopspring/decimal"
 	"github.com/siddontang/go-log/log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -87,6 +90,14 @@ func PlaceOrder(ctx *gin.Context) {
 		orderType = models.OrderTypeLimit
 	}
 
+	if len(req.ClientOid) > 0 {
+		_, err = uuid.Parse(req.ClientOid)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, newMessageVo(fmt.Errorf("invalid client_oid: %v", err)))
+			return
+		}
+	}
+
 	//todo
 	//size, err := utils.StringToFloat64(req.size)
 	//price, err := utils.StringToFloat64(req.price)
@@ -94,7 +105,8 @@ func PlaceOrder(ctx *gin.Context) {
 	price := decimal.NewFromFloat(req.Price)
 	funds := decimal.NewFromFloat(req.Funds)
 
-	order, err := service.PlaceOrder(GetCurrentUser(ctx).Id, req.ProductId, orderType, side, size, price, funds)
+	order, err := service.PlaceOrder(GetCurrentUser(ctx).Id, req.ClientOid, req.ProductId, orderType,
+		side, size, price, funds)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, newMessageVo(err))
 		return
@@ -108,13 +120,23 @@ func PlaceOrder(ctx *gin.Context) {
 // 撤销指定id的订单
 // DELETE /orders/1
 func CancelOrder(ctx *gin.Context) {
-	orderId, _ := utils.AToInt64(ctx.Param("orderId"))
+	rawOrderId := ctx.Param("orderId")
 
-	order, err := service.GetOrderById(orderId)
+	var order *models.Order
+	var err error
+	if strings.HasPrefix(rawOrderId, "client:") {
+		clientOid := strings.Split(rawOrderId, ":")[1]
+		order, err = service.GetOrderByClientOid(GetCurrentUser(ctx).Id, clientOid)
+	} else {
+		orderId, _ := utils.AToInt64(rawOrderId)
+		order, err = service.GetOrderById(orderId)
+	}
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, newMessageVo(err))
 		return
 	}
+
 	if order == nil || order.UserId != GetCurrentUser(ctx).Id {
 		ctx.JSON(http.StatusNotFound, newMessageVo(errors.New("order not found")))
 		return
