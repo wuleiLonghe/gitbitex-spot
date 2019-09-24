@@ -82,8 +82,8 @@ func (s *OrderBookStream) OnDoneLog(log *matching.DoneLog, offset int64) {
 }
 
 func (s *OrderBookStream) runApplier() {
-	var lastLevel2Snapshot OrderBookLevel2Snapshot
-	var lastFullSnapshot OrderBookFullSnapshot
+	var lastLevel2Snapshot *OrderBookLevel2Snapshot
+	var lastFullSnapshot *OrderBookFullSnapshot
 
 	for {
 		select {
@@ -117,14 +117,14 @@ func (s *OrderBookStream) runApplier() {
 					log.Price, log.Side)
 			}
 
-			delta := s.orderBook.seq - lastLevel2Snapshot.Seq
-			if delta > 10 {
-				s.snapshotCh <- s.orderBook.SnapshotLevel2()
+			if lastLevel2Snapshot == nil || s.orderBook.seq-lastLevel2Snapshot.Seq > 10 {
+				lastLevel2Snapshot = s.orderBook.SnapshotLevel2()
+				s.snapshotCh <- lastLevel2Snapshot
 			}
 
-			delta = s.orderBook.seq - lastFullSnapshot.Seq
-			if delta > 10 {
-				s.snapshotCh <- s.orderBook.SnapshotFull()
+			if lastFullSnapshot == nil || s.orderBook.seq-lastFullSnapshot.Seq > 1000 {
+				lastFullSnapshot = s.orderBook.SnapshotFull()
+				s.snapshotCh <- lastFullSnapshot
 			}
 
 			if l2Change != nil {
@@ -132,12 +132,9 @@ func (s *OrderBookStream) runApplier() {
 			}
 
 		case <-time.After(200 * time.Millisecond):
-			if s.orderBook.seq > lastLevel2Snapshot.Seq {
-				s.snapshotCh <- s.orderBook.SnapshotLevel2()
-			}
-
-			if s.orderBook.seq > lastLevel2Snapshot.Seq {
-				s.snapshotCh <- s.orderBook.SnapshotFull()
+			if lastLevel2Snapshot == nil || s.orderBook.seq > lastLevel2Snapshot.Seq {
+				lastLevel2Snapshot = s.orderBook.SnapshotLevel2()
+				s.snapshotCh <- lastLevel2Snapshot
 			}
 		}
 	}

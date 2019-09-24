@@ -41,6 +41,7 @@ type AccountVo struct {
 }
 
 type placeOrderRequest struct {
+	ClientOid   string  `json:"client_oid"`
 	ProductId   string  `json:"productId"`
 	Size        float64 `json:"size"`
 	Funds       float64 `json:"funds"`
@@ -102,6 +103,11 @@ type SignUpRequest struct {
 	Password string
 }
 
+type changePasswordRequest struct {
+	OldPassword string
+	NewPassword string
+}
+
 type userVo struct {
 	Id           string `json:"id"`
 	Email        string `json:"email"`
@@ -109,6 +115,16 @@ type userVo struct {
 	ProfilePhoto string `json:"profilePhoto"`
 	IsBand       bool   `json:"isBand"`
 	CreatedAt    string `json:"createdAt"`
+}
+
+type walletAddressVo struct {
+	Address string `json:"address"`
+}
+
+type transactionVo struct {
+	Id       string `json:"id"`
+	Currency string `json:"currency"`
+	Amount   string `json:"amount"`
 }
 
 func trade2TradeVo(trade *models.Trade) *tradeVo {

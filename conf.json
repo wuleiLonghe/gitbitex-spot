@@ -1,10 +1,11 @@
 {
   "dataSource": {
     "driverName": "mysql",
-    "addr": "192.168.50.193:13306",
+    "addr": "192.168.50.194:13306",
     "database": "spot",
     "user": "root",
-    "password": "root"
+    "password": "root",
+    "enableAutoMigrate": false
   },
   "redis": {
     "addr": "192.168.50.193:6379",
@@ -22,6 +23,5 @@
   "restServer": {
     "addr": ":8001"
   },
-  "jwtToken": "flj23jfoi23apdl3jfslkj23za01mf3",
-  "enableAutoMigrate":true
+  "jwtToken": "flj23jfoi23apdl3jfslkj23za01mf3"
 }
